@@ -38,12 +38,11 @@ int encryptData(char* data, int dataLength)
 	mov ecx, dataLength
 
 	mov ebx, 2
-//	mov al, byte ptr[esi + ebx]	    get 3rd byte of password hash
-//	mov al, byte ptr[esi + ebx * 2]	     get 5th byte of password hash
+//	mov al, byte ptr[esi + ebx]	   
+//	mov al, byte ptr[esi + ebx * 2]	   
 
-//	mov ax, word ptr[esi + ebx * 2]		gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
-//	mov eax, dword ptr[esi + ebx * 2]	gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4]);
-
+//	mov ax, word ptr[esi + ebx * 2]		
+//	mov eax, dword ptr[esi + ebx * 2]	
 	mov al, byte ptr[gkey]
 	mov al, byte ptr[gkey + 1]
 	mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
@@ -96,11 +95,11 @@ int decryptData(char* data, int dataLength)
 	mov al, byte ptr[esi + 5]
 
 	mov ebx, 2
-//	mov al, byte ptr[esi + ebx]	      get 3rd byte of password hash
-//	mov al, byte ptr[esi + ebx * 2]	      get 5th byte of password hash
+//	mov al, byte ptr[esi + ebx]	      
+//	mov al, byte ptr[esi + ebx * 2]	      
 
-//	mov ax, word ptr[esi + ebx * 2]	      gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5]) into ax
-//	mov eax, dword ptr[esi + ebx * 2]     gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
+//	mov ax, word ptr[esi + ebx * 2]	     
+//	mov eax, dword ptr[esi + ebx * 2]     
 
 	mov al, byte ptr[gkey]
 	mov al, byte ptr[gkey + 1]
@@ -109,7 +108,7 @@ int decryptData(char* data, int dataLength)
 	mov al, byte ptr[gkey + ebx + 2]
 	mov al, byte ptr[gkey + ebx + 3]
 
-//	mov al, byte ptr[gptrKey + ebx]	     THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the  value that gptrKey holds)
+//	mov al, byte ptr[gptrKey + ebx]	     
 
 	mov al, byte ptr[esi + 0xd];		// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
 	mov edi, data			        // Put ADDRESS of first data element into edi
