@@ -19,14 +19,14 @@ int encryptData(char* data, int dataLength)
 		// simple example that xors 2nd byte of data with 14th byte in the key file
 		mov esi, gptrKey;						// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
 		mov esi, gptrPasswordHash				// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
-			xor eax, eax
+		xor eax, eax
 
-			mov al, byte ptr[esi]					// get first byte of password hash
-			mov al, byte ptr[esi + 1]
-			mov al, byte ptr[esi + 2]
-			mov al, byte ptr[esi + 3]
-			mov al, byte ptr[esi + 4]				// get 5th byte of password hash
-			mov al, byte ptr[esi + 5]
+		mov al, byte ptr[esi]					// get first byte of password hash
+		mov al, byte ptr[esi + 1]
+		mov al, byte ptr[esi + 2]
+		mov al, byte ptr[esi + 3]
+		mov al, byte ptr[esi + 4]				// get 5th byte of password hash
+		mov al, byte ptr[esi + 5]
 
 			xor ebx, ebx
 			xor ecx, ecx
