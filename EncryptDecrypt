@@ -28,32 +28,32 @@ int encryptData(char* data, int dataLength)
 		mov al, byte ptr[esi + 4]				// get 5th byte of password hash
 		mov al, byte ptr[esi + 5]
 
-			xor ebx, ebx
-			xor ecx, ecx
-			mov ecx, dataLength
+		xor ebx, ebx
+		xor ecx, ecx
+		mov ecx, dataLength
 
-			mov ebx, 2
-			//		mov al, byte ptr[esi + ebx]				// get 3rd byte of password hash
-			//		mov al, byte ptr[esi + ebx * 2]			// get 5th byte of password hash
+		mov ebx, 2
+//		mov al, byte ptr[esi + ebx]				// get 3rd byte of password hash
+//		mov al, byte ptr[esi + ebx * 2]			// get 5th byte of password hash
 
-			//		mov ax, word ptr[esi + ebx * 2]			// gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
-			//		mov eax, dword ptr[esi + ebx * 2]		// gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
+//		mov ax, word ptr[esi + ebx * 2]			// gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
+//		mov eax, dword ptr[esi + ebx * 2]		// gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
 
-			mov al, byte ptr[gkey]
-			mov al, byte ptr[gkey + 1]
-			mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
-			mov al, byte ptr[gkey + ebx + 1]
-			mov al, byte ptr[gkey + ebx + 2]
-			mov al, byte ptr[gkey + ebx + 3]
+		mov al, byte ptr[gkey]
+		mov al, byte ptr[gkey + 1]
+		mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
+		mov al, byte ptr[gkey + ebx + 1]
+		mov al, byte ptr[gkey + ebx + 2]
+		mov al, byte ptr[gkey + ebx + 3]
 
-			//		mov al, byte ptr[gptrKey + ebx]			// THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the value that gptrKey holds)
+//		mov al, byte ptr[gptrKey + ebx]			// THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the value that gptrKey holds)
 
-			mov al, byte ptr[esi + 0xd];			// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
+		mov al, byte ptr[esi + 0xd];			// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
 		mov edi, data			             	// Put ADDRESS of first data element into edi
 
-			xor byte ptr[edi + 1], al				// Exclusive-or the 2nd byte of data with the 14th element of the keyfile
-													// NOTE: Keyfile[14] = 0x21, that value changes the case of a letter and flips the LSB
-													// Capital "B" = 0x42 becomes lowercase "c" since 0x42 xor 0x21 = 0x63
+		xor byte ptr[edi + 1], al				// Exclusive-or the 2nd byte of data with the 14th element of the keyfile
+									// NOTE: Keyfile[14] = 0x21, that value changes the case of a letter and flips the LSB
+									// Capital "B" = 0x42 becomes lowercase "c" since 0x42 xor 0x21 = 0x63
 
 	}
 
@@ -81,37 +81,37 @@ int decryptData(char* data, int dataLength)
 		// simple example that xors 2nd byte of data with 14th byte in the key file
 		mov esi, gptrKey;						// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
 		mov esi, gptrPasswordHash				// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
-			xor eax, eax
+		xor eax, eax
 
-			mov al, byte ptr[esi]					// get first byte of password hash
-			mov al, byte ptr[esi + 1]
-			mov al, byte ptr[esi + 2]
-			mov al, byte ptr[esi + 3]
-			mov al, byte ptr[esi + 4]				// get 5th byte of password hash
-			mov al, byte ptr[esi + 5]
+		mov al, byte ptr[esi]					// get first byte of password hash
+		mov al, byte ptr[esi + 1]
+		mov al, byte ptr[esi + 2]
+		mov al, byte ptr[esi + 3]
+		mov al, byte ptr[esi + 4]				// get 5th byte of password hash
+		mov al, byte ptr[esi + 5]
 
-			mov ebx, 2
-			//		mov al, byte ptr[esi + ebx]				// get 3rd byte of password hash
-			//		mov al, byte ptr[esi + ebx * 2]			// get 5th byte of password hash
+		mov ebx, 2
+//		mov al, byte ptr[esi + ebx]				// get 3rd byte of password hash
+//		mov al, byte ptr[esi + ebx * 2]			// get 5th byte of password hash
 
-			//		mov ax, word ptr[esi + ebx * 2]			// gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
-			//		mov eax, dword ptr[esi + ebx * 2]		// gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
+//		mov ax, word ptr[esi + ebx * 2]			// gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
+//		mov eax, dword ptr[esi + ebx * 2]		// gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
 
-			mov al, byte ptr[gkey]
-			mov al, byte ptr[gkey + 1]
-			mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
-			mov al, byte ptr[gkey + ebx + 1]
-			mov al, byte ptr[gkey + ebx + 2]
-			mov al, byte ptr[gkey + ebx + 3]
+		mov al, byte ptr[gkey]
+		mov al, byte ptr[gkey + 1]
+		mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
+		mov al, byte ptr[gkey + ebx + 1]
+		mov al, byte ptr[gkey + ebx + 2]
+		mov al, byte ptr[gkey + ebx + 3]
 
-			//		mov al, byte ptr[gptrKey + ebx]			// THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the value that gptrKey holds)
+//		mov al, byte ptr[gptrKey + ebx]			// THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the value that gptrKey holds)
 
-			mov al, byte ptr[esi + 0xd];			// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
+		mov al, byte ptr[esi + 0xd];			// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
 		mov edi, data			             	// Put ADDRESS of first data element into edi
-			xor byte ptr[edi + 1], al				// Exclusive-or the 2nd byte of data with the 14th element of the keyfile
-													// NOTE: Keyfile[14] = 0x21, that value changes the case of a letter and flips the LSB
-													// Capital "B" = 0x42 becomes lowercase "c" since 0x42 xor 0x21 = 0x63
-			xor esi, esi
+		xor byte ptr[edi + 1], al			// Exclusive-or the 2nd byte of data with the 14th element of the keyfile
+								// NOTE: Keyfile[14] = 0x21, that value changes the case of a letter and flips the LSB
+								// Capital "B" = 0x42 becomes lowercase "c" since 0x42 xor 0x21 = 0x63
+		xor esi, esi
 	}
 
 	return resulti;
