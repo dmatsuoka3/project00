@@ -3,7 +3,6 @@
 
 #include "Header.h"
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
 // code to encrypt the data as specified by the project assignment
 int encryptData(char* data, int dataLength)
 {
@@ -38,19 +37,13 @@ int encryptData(char* data, int dataLength)
 	mov ecx, dataLength
 
 	mov ebx, 2
-//	mov al, byte ptr[esi + ebx]	   
-//	mov al, byte ptr[esi + ebx * 2]	   
-
-//	mov ax, word ptr[esi + ebx * 2]		
-//	mov eax, dword ptr[esi + ebx * 2]	
+	
 	mov al, byte ptr[gkey]
 	mov al, byte ptr[gkey + 1]
 	mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
 	mov al, byte ptr[gkey + ebx + 1]
 	mov al, byte ptr[gkey + ebx + 2]
 	mov al, byte ptr[gkey + ebx + 3]
-
-//	mov al, byte ptr[gptrKey + ebx]		THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the value that gptrKey holds)
  
 	mov al, byte ptr[esi + 0xd];	        // access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
 	mov edi, data			        // Put ADDRESS of first data element into edi
@@ -64,7 +57,7 @@ int encryptData(char* data, int dataLength)
 	return resulti;
 } // encryptData
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
+
 // code to encrypt the data as specified by the project assignment
 int decryptData(char* data, int dataLength)
 {
@@ -95,27 +88,21 @@ int decryptData(char* data, int dataLength)
 	mov al, byte ptr[esi + 5]
 
 	mov ebx, 2
-//	mov al, byte ptr[esi + ebx]	      
-//	mov al, byte ptr[esi + ebx * 2]	      
-
-//	mov ax, word ptr[esi + ebx * 2]	     
-//	mov eax, dword ptr[esi + ebx * 2]     
-
+	
 	mov al, byte ptr[gkey]
 	mov al, byte ptr[gkey + 1]
 	mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
 	mov al, byte ptr[gkey + ebx + 1]
 	mov al, byte ptr[gkey + ebx + 2]
 	mov al, byte ptr[gkey + ebx + 3]
-
-//	mov al, byte ptr[gptrKey + ebx]	     
-
+	
 	mov al, byte ptr[esi + 0xd];		// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
 	mov edi, data			        // Put ADDRESS of first data element into edi
 	xor byte ptr[edi + 1], al		// Exclusive-or the 2nd byte of data with the 14th element of the keyfile
 						// NOTE: Keyfile[14] = 0x21, that value changes the case of a letter and flips the LSB
 						// Capital "B" = 0x42 becomes lowercase "c" since 0x42 xor 0x21 = 0x63
 	xor esi, esi
+	
 	}
 
 	return resulti;
