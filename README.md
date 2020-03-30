@@ -54,7 +54,7 @@ int encryptData(char* data, int dataLength)
 	}
 
 	return resulti;
-} // encryptData
+}
 
 
 // code to encrypt the data as specified by the project assignment
