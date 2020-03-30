@@ -3,7 +3,6 @@
 
 #include "Header.h"
 
-// code to encrypt the data as specified by the project assignment
 int encryptData(char* data, int dataLength)
 {
 	int resulti = 0;
