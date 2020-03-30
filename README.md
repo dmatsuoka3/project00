@@ -18,28 +18,28 @@ int encryptData(char* data, int dataLength)
 	// Also, you cannot use a lot of global variables - work with registers
 
 	__asm {
-		// you will need to reference some of these global variables
-		// (gptrPasswordHash or gPasswordHash), (gptrKey or gkey), gNumRounds
+	// you will need to reference some of these global variables
+	// (gptrPasswordHash or gPasswordHash), (gptrKey or gkey), gNumRounds
 
-		// simple example that xors 2nd byte of data with 14th byte in the key file
-		mov esi, gptrKey;						// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
-		mov esi, gptrPasswordHash				// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
-			xor eax, eax
+	// simple example that xors 2nd byte of data with 14th byte in the key file
+	mov esi, gptrKey;		// put the ADDRESS of gkey into esi (since *gptrKey =  gkey)
+	mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+	xor eax, eax
 
-			mov al, byte ptr[esi]					// get first byte of password hash
-			mov al, byte ptr[esi + 1]
-			mov al, byte ptr[esi + 2]
-			mov al, byte ptr[esi + 3]
-			mov al, byte ptr[esi + 4]				// get 5th byte of password hash
-			mov al, byte ptr[esi + 5]
+	mov al, byte ptr[esi]		// get first byte of password hash
+	mov al, byte ptr[esi + 1]
+	mov al, byte ptr[esi + 2]
+	mov al, byte ptr[esi + 3]
+	mov al, byte ptr[esi + 4]	// get 5th byte of password hash
+	mov al, byte ptr[esi + 5]
 
-			xor ebx, ebx
-			xor ecx, ecx
-			mov ecx, dataLength
+	xor ebx, ebx
+	xor ecx, ecx
+	mov ecx, dataLength
 
-			mov ebx, 2
-			//		mov al, byte ptr[esi + ebx]				// get 3rd byte of password hash
-			//		mov al, byte ptr[esi + ebx * 2]			// get 5th byte of password hash
+	mov ebx, 2
+//	mov al, byte ptr[esi + ebx]	    // get 3rd byte of password hash
+//	mov al, byte ptr[esi + ebx * 2]	    // get 5th byte of password hash
 
 			//		mov ax, word ptr[esi + ebx * 2]			// gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
 			//		mov eax, dword ptr[esi + ebx * 2]		// gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
