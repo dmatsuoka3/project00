@@ -161,3 +161,259 @@ int decryptData(char* data, int dataLength)
 	return resulti;
 
 } // decryptData
+
+FILE* openInputFile(char* filename)
+{
+	FILE* fptr;
+
+	// FILE* fopen(const char* file_name, const char* mode_of_operation);
+	fptr = fopen("AfterDebugging.jpg", "rb");
+	if (fptr == NULL)
+	{
+		fprintf(stderr, "\n\nError - Could not open input file %s!\n\n", filename);
+		exit(-1);
+	}
+	return fptr;
+} // openInputFile
+
+
+FILE* openOutputFile(char* filename)
+{
+	FILE* fptr;
+
+	fptr = fopen("AfterDebugging.jpg", "wb+");
+	if (fptr == NULL)
+	{
+		fprintf(stderr, "\n\nError - Could not open output file %s!\n\n", filename);
+		exit(-1);
+	}
+	return fptr;
+} // openOutputFile
+
+
+void usage(char* argv[])	//   cryptor.exe -e -i <input file> �k <keyfile> -p <password> [�r <#rounds>]
+{
+	printf("\n\nUsage:\n\n");
+	printf("%s -<e=encrypt or d=decrypt> -i <message_filename> -k <keyfile> -p <password> [-r <#rounds>]\n\n", argv[0]);
+	printf("-e				:encrypt the specified file\n");
+	printf("-d				:decrypt the specified file\n");
+	printf("-i filename		:the name of the file to encrypt or decrypt\n");
+	printf("-p password		:the password to be used for encryption [default='password']\n");
+	printf("-r <#rounds>	:number of encryption rounds (1 - 3)  [default = 1]\n");
+	printf("-o filename		:name of the output file [default='encrypted.txt' or 'decrypted.txt'\n\n");
+	exit(0);
+} // usage
+
+void parseCommandLine(int argc, char* argv[])
+{
+	int cnt;
+	char ch;
+	bool i_flag, o_flag, k_flag, p_flag, error_flag;
+
+	i_flag = k_flag = false;				// these must be true in order to exit this function
+	error_flag = p_flag = o_flag = false;		// these will generate different actions
+
+	cnt = 1;	// skip program name
+	while (cnt < argc)
+	{
+		ch = *argv[cnt];
+		if (ch != '-')
+		{
+			fprintf(stderr, "All options must be preceeded by a dash '-'\n\n");
+			usage(argv);
+		}
+
+		ch = *(argv[cnt] + 1);
+		if (0)
+		{
+		}
+
+		else if (ch == 'e' || ch == 'E')
+		{
+			if (gOp != 0)
+			{
+				fprintf(stderr, "Error! Already specified encrypt or decrypt.\n\n");
+				usage(argv);
+			}
+			gOp = 1;	// encrypt
+		}
+
+		else if (ch == 'd' || ch == 'D')
+		{
+			if (gOp != 0)
+			{
+				fprintf(stderr, "Error! Already specified encrypt or decrypt.\n\n");
+				usage(argv);
+			}
+			gOp = 2;	// decrypt
+		}
+
+		else if (ch == 'i' || ch == 'I')
+		{
+			if (i_flag == true)
+			{
+				fprintf(stderr, "Error! Already specifed an input file.\n\n");
+				usage(argv);
+			}
+			i_flag = true;
+			cnt++;
+			if (cnt >= argc)
+			{
+				fprintf(stderr, "Error! Must specify a filename after '-i'\n\n");
+				usage(argv);
+			}
+			strncpy(gInFileName, argv[cnt], 256);
+		}
+
+		else if (ch == 'o' || ch == 'O')
+		{
+			if (o_flag == true)
+			{
+				fprintf(stderr, "Error! Already specifed an output file.\n\n");
+				usage(argv);
+			}
+			o_flag = true;
+			cnt++;
+			if (cnt >= argc)
+			{
+				fprintf(stderr, "Error! Must specify a filename after '-o'\n\n");
+				usage(argv);
+			}
+			strncpy(gOutFileName, argv[cnt], 256);
+		}
+
+		else if (ch == 'k' || ch == 'K')
+		{
+			if (k_flag == true)
+			{
+				fprintf(stderr, "Error! Already specifed a key file.\n\n");
+				usage(argv);
+			}
+			k_flag = true;
+			cnt++;
+			if (cnt >= argc)
+			{
+				fprintf(stderr, "Error! Must specify a filename after '-k'\n\n");
+				usage(argv);
+			}
+			strncpy(gKeyFileName, argv[cnt], 256);
+		}
+
+		else if (ch == 'p' || ch == 'P')
+		{
+			if (p_flag == true)
+			{
+				fprintf(stderr, "Error! Already specifed a password.\n\n");
+				usage(argv);
+			}
+			p_flag = true;
+			cnt++;
+			if (cnt >= argc)
+			{
+				fprintf(stderr, "Error! Must enter a password after '-p'\n\n");
+				usage(argv);
+			}
+			strncpy(gPassword, argv[cnt], 256);
+		}
+
+		else if (ch == 'r' || ch == 'R')
+		{
+			int x;
+
+			cnt++;
+			if (cnt >= argc)
+			{
+				fprintf(stderr, "Error! Must enter number between 1 and 3 after '-r'\n\n");
+				usage(argv);
+			}
+			x = atoi(argv[cnt]);
+			if (x < 1 || x > 3)
+			{
+				fprintf(stderr, "Warning! Entered bad value for number of rounds. Setting it to one.\n\n");
+				x = 1;
+			}
+			gNumRounds = x;
+		}
+
+		else
+		{
+			fprintf(stderr, "Error! Illegal option in argument. %s\n\n", argv[cnt]);
+			usage(argv);
+		}
+
+		cnt++;
+	} // end while
+
+	if (gOp == 0)
+	{
+		fprintf(stderr, "Error! Encrypt or Decrypt must be specified.\n\n)");
+		error_flag = true;
+	}
+
+	if (i_flag == false)
+	{
+		fprintf(stderr, "Error! No input file specified.\n\n");
+		error_flag = true;
+	}
+
+	if (k_flag == false)
+	{
+		fprintf(stderr, "Error! No key file specified.\n\n");
+		error_flag = true;
+	}
+
+	if (p_flag == false)
+	{
+		fprintf(stderr, "Warning! Using default 'password'.\n\n");
+	}
+
+	if (error_flag)
+	{
+		usage(argv);
+	}
+	return;
+} // parseCommandLine
+
+int main(int argc, char* argv[])
+{
+	int length, resulti;
+
+	// parse command line parameters
+	parseCommandLine(argc, argv);		// sets global variables, checks input options for errors
+
+	// open the input and output files
+	gfptrIn = openInputFile(gInFileName);
+	gfptrKey = openInputFile(gKeyFileName);
+	gfptrOut = openOutputFile(gOutFileName);
+
+	length = (size_t)strlen(gPassword);
+
+	resulti = sha256(NULL, gPassword, length, gPasswordHash);		// get sha-256 hash of password
+	if (resulti != 0)
+	{
+		fprintf(stderr, "Error! Password not hashed correctly.\n\n");
+		exit(-1);
+	}
+
+	length = fread(gkey, 1, 65537, gfptrKey);
+	if (length != 65537)
+	{
+		fprintf(stderr, "Error! Length of key file is not at least 65537.\n\n");
+		exit(-1);
+	}
+	fclose(gfptrKey);
+	gfptrKey = NULL;
+
+	if (gOp == 1)	// encrypt
+	{
+		encryptFile(gfptrIn, gfptrOut);
+	}
+	else
+	{
+		decryptFile(gfptrIn, gfptrOut);
+	}
+
+	fclose(gfptrIn);
+	fclose(gfptrOut);
+
+} // main
