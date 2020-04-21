@@ -1,187 +1,251 @@
+Header.h
+
+
+#pragma once
+#define  _CRT_SECURE_NO_WARNINGS
+
+#ifndef _HEADER1_H
+#define _HEADER1_H
+
+// Main.h
+//
+// This file is the main header file for the CS3843 Encrypt/Decrypt project
+//
+
+#define CRYPTO_ORDER "ABCDE\0" 
+
+// Include Files
+#include <windows.h>
+#include <stdio.h>
+#include <io.h>
+
+// Defines
+// #define TEST_CODE
+
+#define _CRT_SECURE_NO_WARNINGS
+
+#define CRYPTO_ORDER "ABCDE\0"
+#define var_Index -4
+#define var_HopCnt -8
+#define var_RoundNum -12
+#define var_DataLength -16
+
+
+#define FALL_2017		201708
+#define SPRING_2018		201801
+#define SUMMER_2018		201806
+#define FALL_2018		201808
+
+#define CURRENT_SEMESTER FALL_2018
+
+// Structures
+
+#pragma once
+// Prototypes
+int sha256(char* fileName, char* dataBuffer, DWORD dataLength, unsigned char sha256sum[32]);
+void encryptData_01(char* data, int length);
+void decryptData_01(char* data, int length);
+void encryptData_02(char* data, int length);
+void decryptData_02(char* data, int length);
+int encryptData_03(char* data, int length);
+int decryptData_03(char* data, int length);
+int encryptData_Final(char* data, int length);
+int decryptData_Final(char* data, int length);
+
+    // Global Variable Extern Declarations
+    extern unsigned char gkey[65537];
+    extern unsigned char* gptrKey;
+    extern char gPassword[256];
+    extern unsigned char gPasswordHash[32];
+    extern unsigned char* gptrPasswordHash;
+    extern char gCRYPTO_ORDER[8];
+    extern unsigned char gdebug1, gdebug2;
+
+    extern FILE* gfptrIn;
+    extern FILE* gfptrOut;
+    extern FILE* gfptrKey;
+    extern char gInFileName[256];
+    extern char gOutFileName[256];
+    extern char gKeyFileName[256];
+    extern int gOp;			// 1 = encrypt, 2 = decrypt
+    extern int gNumRounds1;
+
+    extern unsigned char gEncodeTable[256];
+    extern unsigned char gDecodeTable[256];
+
+#endif  
+
+
+
+encryptData_Initial.cpp
+
 #include "Header.h"
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
-// code to encrypt the data as specified by the project assignment
-int encryptData(char* data, int dataLength)
-{
-	int resulti = 0;
+	// Global Variables
+	unsigned char gkey[65537];
+	unsigned char* gptrKey = gkey;			// used for inline assembly routines, need to access this way for Visual Studio
+	char gPassword[256] = "SECRET";
+	unsigned char gPasswordHash[32];
+	unsigned char* gptrPasswordHash = gPasswordHash;	// used for inline assembly routines, need to access this way for Visual Studio
+	unsigned char gdebug1, gdebug2;
 
-	gdebug1 = 0;					// a couple of global variables that could be used for debugging
-	gdebug2 = 0;					// also can have a breakpoint in C code
+        FILE* gfptrIn = NULL;
+	FILE* gfptrOut = NULL;
+	FILE* gfptrKey = NULL;
+	char gInFileName[256];
+	char gOutFileName[256];
+	char gKeyFileName[256];
+	int gOp = 0;			// 1 = encrypt, 2 = decrypt
+	int gNumRounds = 1;
 
-	// You can not declare any local variables in C, but should use resulti to indicate any errors
-	// Set up the stack frame and assign variables in assembly if you need to do so
-	// access the parameters BEFORE setting up your own stack frame
-	// Also, you cannot use a lot of global variables - work with registers
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// code to encrypt the data as specified by the project assignment
+	int encryptData(char* data, int dataLength)
+	{
+		int resulti = 0;
 
-	__asm {
-		// you will need to reference some of these global variables
-		// (gptrPasswordHash or gPasswordHash), (gptrKey or gkey), gNumRounds
+		gdebug1 = 0;					// a couple of global variables that could be used for debugging
+		gdebug2 = 0;					// also can have a breakpoint in C code
 
-		// simple example that xors 2nd byte of data with 14th byte in the key file
-		mov esi, gptrKey;						// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
-		mov esi, gptrPasswordHash				// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
-		xor eax, eax
-		mov al, byte ptr[esi]
-		xor ecx, ecx
-		mov cl, byte ptr[esi +1]
-		add ax, cx
-		
-		xor ebx, ebx
-		xor ecx, ecx
-//		mov al, byte ptr[esi]					// get first byte of password hash
-//		mov al, byte ptr[esi + 1]
-//		mov al, byte ptr[esi + 2]
-//		mov al, byte ptr[esi + 3]
-//		mov al, byte ptr[esi + 4]				// get 5th byte of password hash
-//		mov al, byte ptr[esi + 5]
+		// You can not declare any local variables in C, but should use resulti to indicate any errors
+		// Set up the stack frame and assign variables in assembly if you need to do so
+		// access the parameters BEFORE setting up your own stack frame
+		// Also, you cannot use a lot of global variables - work with registers
 
-		mov ecx, dataLength
-		mov edi, data
-		
-    LOOP1 :
-		mov dl, byte ptr[edi + ebx]
-		xor dl, byte ptr[esi + eax]
-		mov byte ptr[edi + ebx], dl
+		__asm {
+			// you will need to reference some of these global variables
+			// (gptrPasswordHash or gPasswordHash), (gptrKey or gkey), gNumRounds
 
-		add ebx, 1
-		cmp ebx, ecx
-		mov ebx, 2
-		ja EXIT_END
-		jmp LOOP1
+			// simple example that xors 2nd byte of data with 14th byte in the key file
 
-	EXIT_END :
-		xor ebx, ebx
+			mov esi, gptrKey;						// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
+			mov esi, gptrPasswordHash				// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+			xor eax, eax
+			mov al, byte ptr[esi]
+			shl ax, 8
+			xor ecx, ecx
+			mov cl, byte ptr[esi + 1]
+			add ax, cx
 
-	EXIT :
-		mov resulti, ebx
-//		mov al, byte ptr[esi + ebx]				// get 3rd byte of password hash
-//		mov al, byte ptr[esi + ebx * 2]			// get 5th byte of password hash
+			xor ebx, ebx
+			xor ecx, ecx
+	//		mov al, byte ptr[esi]					// get first byte of password hash
+	//		mov al, byte ptr[esi + 1]
+	//		mov al, byte ptr[esi + 2]
+	//		mov al, byte ptr[esi + 3]
+	//		mov al, byte ptr[esi + 4]				// get 5th byte of password hash
+	//		mov al, byte ptr[esi + 5]
 
-//		mov ax, word ptr[esi + ebx * 2]			// gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
-//		mov eax, dword ptr[esi + ebx * 2]		// gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
+			mov ecx, dataLength
+			mov edi, data
 
-//		mov al, byte ptr[gkey]
-//		mov al, byte ptr[gkey + 1]
-//		mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
-//		mov al, byte ptr[gkey + ebx + 1]
-//		mov al, byte ptr[gkey + ebx + 2]
-//		mov al, byte ptr[gkey + ebx + 3]
+		LOOP1 :
+			mov dl, byte ptr[edi + ebx]
+			xor dl, byte ptr[esi + eax]
+			mov byte ptr[edi + ebx], dl
 
-//		mov al, byte ptr[gptrKey + ebx]			// THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the value that gptrKey holds)
+			add ebx, 1
+			cmp ebx, ecx
+			mov ebx, 2
+			ja EXIT_END
+			jmp LOOP1
 
-//		mov al, byte ptr[esi + 0xd];			// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
-								             	// Put ADDRESS of first data element into edi
+		EXIT_END :
+			xor ebx, ebx
 
-//		xor byte ptr[edi + 1], al				// Exclusive-or the 2nd byte of data with the 14th element of the keyfile
-												// NOTE: Keyfile[14] = 0x21, that value changes the case of a letter and flips the LSB
-												// Capital "B" = 0x42 becomes lowercase "c" since 0x42 xor 0x21 = 0x63
-	}
+			mov resulti, ebx
+	//		mov al, byte ptr[esi + ebx]				// get 3rd byte of password hash
+	//		mov al, byte ptr[esi + ebx * 2]			// get 5th byte of password hash
 
-	return resulti;
+	//		mov ax, word ptr[esi + ebx * 2]			// gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
+	//		mov eax, dword ptr[esi + ebx * 2]		// gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
+
+	//		mov al, byte ptr[gkey]
+	//		mov al, byte ptr[gkey + 1]
+	//		mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
+	//		mov al, byte ptr[gkey + ebx + 1]
+	//		mov al, byte ptr[gkey + ebx + 2]
+	//		mov al, byte ptr[gkey + ebx + 3]
+
+	//		mov al, byte ptr[gptrKey + ebx]			// THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the value that gptrKey holds)
+
+	//		mov al, byte ptr[esi + 0xd];			// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
+																			// Put ADDRESS of first data element into edi
+
+	//		xor byte ptr[edi + 1], al				// Exclusive-or the 2nd byte of data with the 14th element of the keyfile
+																// NOTE: Keyfile[14] = 0x21, that value changes the case of a letter and flips the LSB
+																// Capital "B" = 0x42 becomes lowercase "c" since 0x42 xor 0x21 = 0x63
+		}
+
+		return resulti;
+
 } // encryptData
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
-// code to encrypt the data as specified by the project assignment
-int decryptData(char* data, int dataLength)
+// code to read the file to encrypt
+int encryptFile(FILE* fptrIn, FILE* fptrOut)
 {
-	int resulti = 0;
+	char* buffer;
+	unsigned int filesize;
 
-	gdebug1 = 0;					// a couple of global variables that could be used for debugging
-	gdebug2 = 0;					// also can have a breakpoint in C code
+	fseek(fptrIn, 0, SEEK_END);
+	filesize = ftell(fptrIn);
+	fseek(fptrIn, 0, SEEK_SET);
 
-	// You can not declare any local variables in C, but should use resulti to indicate any errors
-	// Set up the stack frame and assign variables in assembly if you need to do so
-	// access the parameters BEFORE setting up your own stack frame
-	// Also, you cannot use a lot of global variables - work with registers
-
-	__asm {
-		// you will need to reference some of these global variables
-		// (gptrPasswordHash or gPasswordHash), (gptrKey or gkey), gNumRounds
-
-		// simple example that xors 2nd byte of data with 14th byte in the key file
-		mov esi, gptrKey;						// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
-		mov esi, gptrPasswordHash				// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
-		
-		xor eax, eax
-		mov cl, byte ptr[esi + 1]
-		add ax, cx
-
-		xor ebx, ebx
-		xor ecx, ecx
-//		mov al, byte ptr[esi]					// get first byte of password hash
-//		mov al, byte ptr[esi + 1]
-//		mov al, byte ptr[esi + 2]
-//		mov al, byte ptr[esi + 3]
-//		mov al, byte ptr[esi + 4]				// get 5th byte of password hash
-//		mov al, byte ptr[esi + 5]
-
-//		mov ebx, 2
-//		mov al, byte ptr[esi + ebx]				// get 3rd byte of password hash
-//		mov al, byte ptr[esi + ebx * 2]			// get 5th byte of password hash
-
-//		mov ax, word ptr[esi + ebx * 2]			// gets 5th and 6th bytes of password hash ( gPasswordHash[4] and gPasswordHash[5] ) into ax
-//		mov eax, dword ptr[esi + ebx * 2]		// gets 4 bytes, as in:  unsigned int X = *( (unsigned int*) &gPasswordHash[4] );
-
-		mov ecx, dataLength
-		mov edi, data
-
-     LOOP1 :
-		mov dl, byte ptr[edi + ebx]
-		xor dl, byte ptr[esi + eax]
-		mov byte ptr[edi + ebx], dl
-
-		add ebx, 1
-		cmp ebx, ecx
-		ja EXIT_END
-		jmp LOOP1
-	
-	EXIT_END :
-		xor ebx, ebx
-
-	EXIT :
-		mov resulti, ebx
-//		mov al, byte ptr[gkey]
-//		mov al, byte ptr[gkey + 1]
-//		mov al, byte ptr[gkey + ebx]			// get's 3rd byte of gkey[] data
-//		mov al, byte ptr[gkey + ebx + 1]
-//		mov al, byte ptr[gkey + ebx + 2]
-//		mov al, byte ptr[gkey + ebx + 3]
-
-//		mov al, byte ptr[gptrKey + ebx]			// THIS IS INCORRECT - will add the address of the gptrKey global variable (NOT the value that gptrKey holds)
-
-//		mov al, byte ptr[esi + 0xd];			// access 14th byte in gkey[]: 0, 1, 2 ... d is the 14th byte
-//		mov edi, data			             	// Put ADDRESS of first data element into edi
-//		xor byte ptr[edi + 1], al				// Exclusive-or the 2nd byte of data with the 14th element of the keyfile
-												// NOTE: Keyfile[14] = 0x21, that value changes the case of a letter and flips the LSB
-												// Capital "B" = 0x42 becomes lowercase "c" since 0x42 xor 0x21 = 0x63
-//		xor esi, esi
+	if (filesize > 0x1000000)					// 16 MB, file too large
+	{
+		fprintf(stderr, "Error - Input file to encrypt is too large.\n\n");
+		return -1;
 	}
 
-	return resulti;
+	// use the password hash to encrypt
+	buffer = (char*)malloc(filesize);
+	if (buffer == NULL)
+	{
+		fprintf(stderr, "Error - Could not allocate %d bytes of memory on the heap.\n\n", filesize);
+		return -1;
+	}
 
-} // decryptData
+	fread(buffer, 1, filesize, fptrIn);	// read entire file
+	encryptData(buffer, filesize);
+	fwrite(buffer, 1, filesize, fptrOut);
+	free(buffer);
+
+	return 0;
+
+} // encryptFile
 
 FILE* openInputFile(char* filename)
 {
 	FILE* fptr;
+	long sz;
 
-	// FILE* fopen(const char* file_name, const char* mode_of_operation);
-	fptr = fopen("AfterDebugging.jpg", "rb");
+	fptr = fopen(filename, "rb");
 	if (fptr == NULL)
 	{
 		fprintf(stderr, "\n\nError - Could not open input file %s!\n\n", filename);
 		exit(-1);
 	}
+
+	fseek(fptr, 0, SEEK_END);
+	sz = ftell(fptr);
+	fseek(fptr, 0, SEEK_SET);
+
+	if (sz == 0)
+	{
+		fprintf(stderr, "Error - File size is zero for \"%s\".\n\n", filename);
+		fprintf(stderr, "Aborting operation - try again!\n\n");
+		fclose(fptr);
+		exit(0);
+	}
+
 	return fptr;
 } // openInputFile
-
 
 FILE* openOutputFile(char* filename)
 {
 	FILE* fptr;
 
-	fptr = fopen("AfterDebugging.jpg", "wb+");
+	fptr = fopen(filename, "wb+");
 	if (fptr == NULL)
 	{
 		fprintf(stderr, "\n\nError - Could not open output file %s!\n\n", filename);
@@ -190,17 +254,22 @@ FILE* openOutputFile(char* filename)
 	return fptr;
 } // openOutputFile
 
-
-void usage(char* argv[])	//   cryptor.exe -e -i <input file> �k <keyfile> -p <password> [�r <#rounds>]
+void usage(char* argv[])	//   cryptor.exe -e -i <input file> –k <keyfile> -p <password> [–r <#rounds>]
 {
 	printf("\n\nUsage:\n\n");
-	printf("%s -<e=encrypt or d=decrypt> -i <message_filename> -k <keyfile> -p <password> [-r <#rounds>]\n\n", argv[0]);
-	printf("-e				:encrypt the specified file\n");
-	printf("-d				:decrypt the specified file\n");
-	printf("-i filename		:the name of the file to encrypt or decrypt\n");
+
+	printf("To Encrypt:\n");
+	printf("%s -e <message_filename> -k <keyfile> -p <password> [-r <#rounds>]\n\n", argv[0]);
+
+	printf("To Decrypt:\n");
+	printf("%s -d <message_filename> -k <keyfile> -p <password> [-r <#rounds>]\n\n", argv[0]);
+
+	printf("-e filename		:encrypt the specified file\n");
+	printf("-d filename		:decrypt the specified file\n");
 	printf("-p password		:the password to be used for encryption [default='password']\n");
-	printf("-r <#rounds>	:number of encryption rounds (1 - 3)  [default = 1]\n");
+	printf("-r <#rounds>		:number of encryption rounds (1 - 3)  [default = 1]\n");
 	printf("-o filename		:name of the output file [default='encrypted.txt' or 'decrypted.txt'\n\n");
+	printf("The order of the options is irrelevant.\n\n");
 	exit(0);
 } // usage
 
@@ -208,12 +277,13 @@ void parseCommandLine(int argc, char* argv[])
 {
 	int cnt;
 	char ch;
-	bool i_flag, o_flag, k_flag, p_flag, error_flag;
+	bool i_flag, o_flag, k_flag, p_flag, err_flag;
 
 	i_flag = k_flag = false;				// these must be true in order to exit this function
-	error_flag = p_flag = o_flag = false;		// these will generate different actions
+	err_flag = p_flag = o_flag = false;		// these will generate different actions
 
 	cnt = 1;	// skip program name
+
 	while (cnt < argc)
 	{
 		ch = *argv[cnt];
@@ -230,39 +300,42 @@ void parseCommandLine(int argc, char* argv[])
 
 		else if (ch == 'e' || ch == 'E')
 		{
-			if (gOp != 0)
+			if (i_flag == true || gOp != 0)
 			{
-				fprintf(stderr, "Error! Already specified encrypt or decrypt.\n\n");
+				fprintf(stderr, "Error! Already specifed an input file - can't encrypt/decrypt multiple files.\n\n");
 				usage(argv);
 			}
+
+			i_flag = true;
+			cnt++;
+			if (cnt >= argc)
+			{
+				fprintf(stderr, "Error! Must specify a filename after '-e'\n\n");
+				usage(argv);
+			}
+
+			strncpy(gInFileName, argv[cnt], 256);
 			gOp = 1;	// encrypt
 		}
 
 		else if (ch == 'd' || ch == 'D')
 		{
-			if (gOp != 0)
+			if (i_flag == true || gOp != 0)
 			{
-				fprintf(stderr, "Error! Already specified encrypt or decrypt.\n\n");
+				fprintf(stderr, "Error! Already specifed an input file - can't decrypt/encrypt multiple files.\n\n");
 				usage(argv);
 			}
-			gOp = 2;	// decrypt
-		}
 
-		else if (ch == 'i' || ch == 'I')
-		{
-			if (i_flag == true)
-			{
-				fprintf(stderr, "Error! Already specifed an input file.\n\n");
-				usage(argv);
-			}
 			i_flag = true;
 			cnt++;
 			if (cnt >= argc)
 			{
-				fprintf(stderr, "Error! Must specify a filename after '-i'\n\n");
+				fprintf(stderr, "Error! Must specify a filename after '-d'\n\n");
 				usage(argv);
 			}
+
 			strncpy(gInFileName, argv[cnt], 256);
+			gOp = 2;	// decrypt
 		}
 
 		else if (ch == 'o' || ch == 'O')
@@ -347,19 +420,19 @@ void parseCommandLine(int argc, char* argv[])
 	if (gOp == 0)
 	{
 		fprintf(stderr, "Error! Encrypt or Decrypt must be specified.\n\n)");
-		error_flag = true;
+		err_flag = true;
 	}
 
 	if (i_flag == false)
 	{
 		fprintf(stderr, "Error! No input file specified.\n\n");
-		error_flag = true;
+		err_flag = true;
 	}
 
 	if (k_flag == false)
 	{
 		fprintf(stderr, "Error! No key file specified.\n\n");
-		error_flag = true;
+		err_flag = true;
 	}
 
 	if (p_flag == false)
@@ -367,40 +440,126 @@ void parseCommandLine(int argc, char* argv[])
 		fprintf(stderr, "Warning! Using default 'password'.\n\n");
 	}
 
-	if (error_flag)
+	if (o_flag == false && err_flag == false)	// no need to do this if we have errors
+	{
+		strcpy(gOutFileName, gInFileName);
+		if (gOp == 1)	// encrypt
+		{
+			strcat(gOutFileName, ".enc");
+		}
+		if (gOp == 2)	// decrypt
+		{
+			strcat(gOutFileName, ".dec");
+		}
+	}
+
+	if (err_flag)
 	{
 		usage(argv);
 	}
 	return;
 } // parseCommandLine
 
+//int main()
+//{
+//  /*char* buffer;
+//	unsigned int fileSize;*/
+//
+//	char fname[20];
+//	FILE* inputFile, * fpt;
+//
+//	unsigned int starting_index = gPasswordHash[0] * 256 + gPasswordHash[1];
+//
+//	/*int encryptFile;
+//
+//	fileSize = _filelength(_fileno(inputFile));
+//	buffer = (char*)malloc(fileSize);
+//
+//	encryptFile = encryptData(buffer, fileSize);*/
+//	
+//	gfptrIn = openInputFile(gInFileName);
+//	gfptrKey = openInputFile(gKeyFileName);
+//
+//	printf("\n Input the name of file to encrypt : ");
+//	scanf("%s", fname);
+//
+//	// char gPassword = fopen("AfterDubbing.jpg", "r");
+//	// char dataFile = fgetc(inputFile);
+//	// int dataLength = fgetc(inputFile);
+//	// fileName = encryptData(dataFile, dataLength);
+//
+//	fpt = fopen(fname, "r");
+//	
+//	if (fpt == NULL) {
+//
+//		printf("This file does not exist!");
+//		exit(1);
+//
+//	}
+//
+//	//fpt = fopen("temp.txt", "w");
+//
+//	if (gOp == 1) {
+//
+//		encryptFile(gfptrIn, gfptrOut);
+//
+//	}
+//
+//	return 0;
+//}
+
 int main(int argc, char* argv[])
 {
-	int length, resulti;
+#ifdef TEST_CODE
+	char testData[] = "The big lazy brown FOX jumped 123 the 987 dog. Then he 8 a CHICKEN.";
+	int numCAPS, numLow, numNonLetters;
+	numCAPS = numLow = numNonLetters = 0;
+	exCountLetters(testData, strlen(testData), &numCAPS, &numLow, &numNonLetters);
+	printf("numCAPS=%d, numLow=%d, numNonLetters=%d\n", numCAPS, numLow, numNonLetters);
+	exit(0);
+#endif
+
+	/*int round, x, Starting_index;
+	int index = 0;
+
+	for (round = 0, round < gNumRounds; round++) {
+
+	}*/
+
+	int length; // resulti;
+
+//	fprintf(stdout, "\n\nCrypto Order:%s\n\n", CRYPTO_ORDER);
 
 	// parse command line parameters
 	parseCommandLine(argc, argv);		// sets global variables, checks input options for errors
 
+	//strcpy(gInFileName, "Key.data");
+
 	// open the input and output files
-	gfptrIn = openInputFile(gInFileName);
-	gfptrKey = openInputFile(gKeyFileName);
-	gfptrOut = openOutputFile(gOutFileName);
+	gfptrIn = openInputFile(gInFileName);	 // reading the file ---- First parameter for encrypt/decrypt function
+	gfptrKey = openInputFile(gKeyFileName);	 // reading the keyfile data
+	gfptrOut = openOutputFile(gOutFileName); // writing the file ---- Second parameter for encrypt/decrypt function
 
 	length = (size_t)strlen(gPassword);
 
-	resulti = sha256(NULL, gPassword, length, gPasswordHash);		// get sha-256 hash of password
+	int resulti = sha256(NULL, gPassword, length, gPasswordHash);		// get sha-256 hash of password
 	if (resulti != 0)
 	{
 		fprintf(stderr, "Error! Password not hashed correctly.\n\n");
 		exit(-1);
 	}
+	
+	//strcpy(gInFileName, "Key.data"); 
+	
 
 	length = fread(gkey, 1, 65537, gfptrKey);
 	if (length != 65537)
 	{
 		fprintf(stderr, "Error! Length of key file is not at least 65537.\n\n");
 		exit(-1);
+
 	}
+
 	fclose(gfptrKey);
 	gfptrKey = NULL;
 
@@ -408,12 +567,464 @@ int main(int argc, char* argv[])
 	{
 		encryptFile(gfptrIn, gfptrOut);
 	}
-	else
+	/*else
 	{
 		decryptFile(gfptrIn, gfptrOut);
-	}
+	}*/
 
 	fclose(gfptrIn);
 	fclose(gfptrOut);
 
+	return 0;
 } // main
+
+
+Header2.h
+
+#ifndef _HEADER2_H
+#define _HEADER2_H
+
+#ifndef uint8
+#define uint8  unsigned char
+#endif
+
+#ifndef uint32
+#define uint32 unsigned long int
+#endif
+
+typedef struct
+{
+    uint32 total[2];
+    uint32 state[8];
+    uint8 buffer[64];
+}
+sha256_context;
+
+void sha256_starts(sha256_context* ctx);
+void sha256_update(sha256_context* ctx, uint8* input, uint32 length);
+void sha256_finish(sha256_context* ctx, uint8 digest[32]);
+
+#endif  /*sha256.h */
+
+#include <windows.h>
+
+
+SHA-256.cpp
+
+ /*  FIPS-180-2 compliant SHA-256 implementation
+ *
+ *  Copyright (C) 2001-2003  Christophe Devine
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <string.h>
+
+#include "Header2.h"
+
+ //#include "..\GameTime\Main.h"
+
+#define GET_UINT32(n,b,i)                       \
+{                                               \
+    (n) = ( (uint32) (b)[(i)    ] << 24 )       \
+        | ( (uint32) (b)[(i) + 1] << 16 )       \
+        | ( (uint32) (b)[(i) + 2] <<  8 )       \
+        | ( (uint32) (b)[(i) + 3]       );      \
+}
+
+#define PUT_UINT32(n,b,i)                       \
+{                                               \
+    (b)[(i)    ] = (uint8) ( (n) >> 24 );       \
+    (b)[(i) + 1] = (uint8) ( (n) >> 16 );       \
+    (b)[(i) + 2] = (uint8) ( (n) >>  8 );       \
+    (b)[(i) + 3] = (uint8) ( (n)       );       \
+}
+
+void sha256_starts(sha256_context* ctx)
+{
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
+
+    ctx->state[0] = 0x6A09E667;
+    ctx->state[1] = 0xBB67AE85;
+    ctx->state[2] = 0x3C6EF372;
+    ctx->state[3] = 0xA54FF53A;
+    ctx->state[4] = 0x510E527F;
+    ctx->state[5] = 0x9B05688C;
+    ctx->state[6] = 0x1F83D9AB;
+    ctx->state[7] = 0x5BE0CD19;
+}
+
+void sha256_process(sha256_context* ctx, uint8 data[64])
+{
+    uint32 temp1, temp2, W[64];
+    uint32 A, B, C, D, E, F, G, H;
+
+    GET_UINT32(W[0], data, 0);
+    GET_UINT32(W[1], data, 4);
+    GET_UINT32(W[2], data, 8);
+    GET_UINT32(W[3], data, 12);
+    GET_UINT32(W[4], data, 16);
+    GET_UINT32(W[5], data, 20);
+    GET_UINT32(W[6], data, 24);
+    GET_UINT32(W[7], data, 28);
+    GET_UINT32(W[8], data, 32);
+    GET_UINT32(W[9], data, 36);
+    GET_UINT32(W[10], data, 40);
+    GET_UINT32(W[11], data, 44);
+    GET_UINT32(W[12], data, 48);
+    GET_UINT32(W[13], data, 52);
+    GET_UINT32(W[14], data, 56);
+    GET_UINT32(W[15], data, 60);
+
+#define  SHR(x,n) ((x & 0xFFFFFFFF) >> n)
+#define ROTR(x,n) (SHR(x,n) | (x << (32 - n)))
+
+#define S0(x) (ROTR(x, 7) ^ ROTR(x,18) ^  SHR(x, 3))
+#define S1(x) (ROTR(x,17) ^ ROTR(x,19) ^  SHR(x,10))
+
+#define S2(x) (ROTR(x, 2) ^ ROTR(x,13) ^ ROTR(x,22))
+#define S3(x) (ROTR(x, 6) ^ ROTR(x,11) ^ ROTR(x,25))
+
+#define F0(x,y,z) ((x & y) | (z & (x | y)))
+#define F1(x,y,z) (z ^ (x & (y ^ z)))
+
+#define R(t)                                    \
+(                                               \
+    W[t] = S1(W[t -  2]) + W[t -  7] +          \
+           S0(W[t - 15]) + W[t - 16]            \
+)
+
+#define P(a,b,c,d,e,f,g,h,x,K)                  \
+{                                               \
+    temp1 = h + S3(e) + F1(e,f,g) + K + x;      \
+    temp2 = S2(a) + F0(a,b,c);                  \
+    d += temp1; h = temp1 + temp2;              \
+}
+
+    A = ctx->state[0];
+    B = ctx->state[1];
+    C = ctx->state[2];
+    D = ctx->state[3];
+    E = ctx->state[4];
+    F = ctx->state[5];
+    G = ctx->state[6];
+    H = ctx->state[7];
+
+    P(A, B, C, D, E, F, G, H, W[0], 0x428A2F98);
+    P(H, A, B, C, D, E, F, G, W[1], 0x71374491);
+    P(G, H, A, B, C, D, E, F, W[2], 0xB5C0FBCF);
+    P(F, G, H, A, B, C, D, E, W[3], 0xE9B5DBA5);
+    P(E, F, G, H, A, B, C, D, W[4], 0x3956C25B);
+    P(D, E, F, G, H, A, B, C, W[5], 0x59F111F1);
+    P(C, D, E, F, G, H, A, B, W[6], 0x923F82A4);
+    P(B, C, D, E, F, G, H, A, W[7], 0xAB1C5ED5);
+    P(A, B, C, D, E, F, G, H, W[8], 0xD807AA98);
+    P(H, A, B, C, D, E, F, G, W[9], 0x12835B01);
+    P(G, H, A, B, C, D, E, F, W[10], 0x243185BE);
+    P(F, G, H, A, B, C, D, E, W[11], 0x550C7DC3);
+    P(E, F, G, H, A, B, C, D, W[12], 0x72BE5D74);
+    P(D, E, F, G, H, A, B, C, W[13], 0x80DEB1FE);
+    P(C, D, E, F, G, H, A, B, W[14], 0x9BDC06A7);
+    P(B, C, D, E, F, G, H, A, W[15], 0xC19BF174);
+    P(A, B, C, D, E, F, G, H, R(16), 0xE49B69C1);
+    P(H, A, B, C, D, E, F, G, R(17), 0xEFBE4786);
+    P(G, H, A, B, C, D, E, F, R(18), 0x0FC19DC6);
+    P(F, G, H, A, B, C, D, E, R(19), 0x240CA1CC);
+    P(E, F, G, H, A, B, C, D, R(20), 0x2DE92C6F);
+    P(D, E, F, G, H, A, B, C, R(21), 0x4A7484AA);
+    P(C, D, E, F, G, H, A, B, R(22), 0x5CB0A9DC);
+    P(B, C, D, E, F, G, H, A, R(23), 0x76F988DA);
+    P(A, B, C, D, E, F, G, H, R(24), 0x983E5152);
+    P(H, A, B, C, D, E, F, G, R(25), 0xA831C66D);
+    P(G, H, A, B, C, D, E, F, R(26), 0xB00327C8);
+    P(F, G, H, A, B, C, D, E, R(27), 0xBF597FC7);
+    P(E, F, G, H, A, B, C, D, R(28), 0xC6E00BF3);
+    P(D, E, F, G, H, A, B, C, R(29), 0xD5A79147);
+    P(C, D, E, F, G, H, A, B, R(30), 0x06CA6351);
+    P(B, C, D, E, F, G, H, A, R(31), 0x14292967);
+    P(A, B, C, D, E, F, G, H, R(32), 0x27B70A85);
+    P(H, A, B, C, D, E, F, G, R(33), 0x2E1B2138);
+    P(G, H, A, B, C, D, E, F, R(34), 0x4D2C6DFC);
+    P(F, G, H, A, B, C, D, E, R(35), 0x53380D13);
+    P(E, F, G, H, A, B, C, D, R(36), 0x650A7354);
+    P(D, E, F, G, H, A, B, C, R(37), 0x766A0ABB);
+    P(C, D, E, F, G, H, A, B, R(38), 0x81C2C92E);
+    P(B, C, D, E, F, G, H, A, R(39), 0x92722C85);
+    P(A, B, C, D, E, F, G, H, R(40), 0xA2BFE8A1);
+    P(H, A, B, C, D, E, F, G, R(41), 0xA81A664B);
+    P(G, H, A, B, C, D, E, F, R(42), 0xC24B8B70);
+    P(F, G, H, A, B, C, D, E, R(43), 0xC76C51A3);
+    P(E, F, G, H, A, B, C, D, R(44), 0xD192E819);
+    P(D, E, F, G, H, A, B, C, R(45), 0xD6990624);
+    P(C, D, E, F, G, H, A, B, R(46), 0xF40E3585);
+    P(B, C, D, E, F, G, H, A, R(47), 0x106AA070);
+    P(A, B, C, D, E, F, G, H, R(48), 0x19A4C116);
+    P(H, A, B, C, D, E, F, G, R(49), 0x1E376C08);
+    P(G, H, A, B, C, D, E, F, R(50), 0x2748774C);
+    P(F, G, H, A, B, C, D, E, R(51), 0x34B0BCB5);
+    P(E, F, G, H, A, B, C, D, R(52), 0x391C0CB3);
+    P(D, E, F, G, H, A, B, C, R(53), 0x4ED8AA4A);
+    P(C, D, E, F, G, H, A, B, R(54), 0x5B9CCA4F);
+    P(B, C, D, E, F, G, H, A, R(55), 0x682E6FF3);
+    P(A, B, C, D, E, F, G, H, R(56), 0x748F82EE);
+    P(H, A, B, C, D, E, F, G, R(57), 0x78A5636F);
+    P(G, H, A, B, C, D, E, F, R(58), 0x84C87814);
+    P(F, G, H, A, B, C, D, E, R(59), 0x8CC70208);
+    P(E, F, G, H, A, B, C, D, R(60), 0x90BEFFFA);
+    P(D, E, F, G, H, A, B, C, R(61), 0xA4506CEB);
+    P(C, D, E, F, G, H, A, B, R(62), 0xBEF9A3F7);
+    P(B, C, D, E, F, G, H, A, R(63), 0xC67178F2);
+
+    ctx->state[0] += A;
+    ctx->state[1] += B;
+    ctx->state[2] += C;
+    ctx->state[3] += D;
+    ctx->state[4] += E;
+    ctx->state[5] += F;
+    ctx->state[6] += G;
+    ctx->state[7] += H;
+}
+
+void sha256_update(sha256_context* ctx, uint8* input, uint32 length)
+{
+    uint32 left, fill;
+
+    if (!length) return;
+
+    left = ctx->total[0] & 0x3F;
+    fill = 64 - left;
+
+    ctx->total[0] += length;
+    ctx->total[0] &= 0xFFFFFFFF;
+
+    if (ctx->total[0] < length)
+        ctx->total[1]++;
+
+    if (left && length >= fill)
+    {
+        memcpy((void*)(ctx->buffer + left),
+            (void*)input, fill);
+        sha256_process(ctx, ctx->buffer);
+        length -= fill;
+        input += fill;
+        left = 0;
+    }
+
+    while (length >= 64)
+    {
+        sha256_process(ctx, input);
+        length -= 64;
+        input += 64;
+    }
+
+    if (length)
+    {
+        memcpy((void*)(ctx->buffer + left),
+            (void*)input, length);
+    }
+}
+
+static uint8 sha256_padding[64] =
+{
+ 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+void sha256_finish(sha256_context* ctx, uint8 digest[32])
+{
+    uint32 last, padn;
+    uint32 high, low;
+    uint8 msglen[8];
+
+    high = (ctx->total[0] >> 29)
+        | (ctx->total[1] << 3);
+    low = (ctx->total[0] << 3);
+
+    PUT_UINT32(high, msglen, 0);
+    PUT_UINT32(low, msglen, 4);
+
+    last = ctx->total[0] & 0x3F;
+    padn = (last < 56) ? (56 - last) : (120 - last);
+
+    sha256_update(ctx, sha256_padding, padn);
+    sha256_update(ctx, msglen, 8);
+
+    PUT_UINT32(ctx->state[0], digest, 0);
+    PUT_UINT32(ctx->state[1], digest, 4);
+    PUT_UINT32(ctx->state[2], digest, 8);
+    PUT_UINT32(ctx->state[3], digest, 12);
+    PUT_UINT32(ctx->state[4], digest, 16);
+    PUT_UINT32(ctx->state[5], digest, 20);
+    PUT_UINT32(ctx->state[6], digest, 24);
+    PUT_UINT32(ctx->state[7], digest, 28);
+}
+
+
+#include <stdlib.h>
+#include <stdio.h>
+
+/*
+ * those are the standard FIPS-180-2 test vectors
+ */
+
+
+char* msg[3]{ (char*)(const char[4])"abc",(char*)(const char[57])
+"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", (char*)0 };
+
+
+//static char* val[] =
+//{
+//    "ba7816bf8f01cfea414140de5dae2223" \
+//    "b00361a396177a9cb410ff61f20015ad",
+//    "248d6a61d20638b8e5c026930c3e6039" \
+//    "a33ce45964ff2167f6ecedd419db06c1",
+//    "cdc76e5c9914fb9281a1c7e284d73e67" \
+//    "f1809a48a497200e046d39ccc7112cd0"
+//};
+
+typedef unsigned __int64 QWORD;
+
+int sha256(char* fileName, char* dataBuffer, DWORD dataLength, unsigned char sha256sum[32])
+{
+    FILE* fptrIn = NULL;
+    sha256_context ctx;
+    unsigned char buffer[4096];
+    DWORD numBytesRead, dataBufferIndex;
+    QWORD totalByteCount;
+
+
+    if (fileName != NULL)
+    {
+        fptrIn = fopen(fileName, "rb");
+    }
+
+    totalByteCount = 0;
+    dataBufferIndex = 0;
+
+    memset(sha256sum, 0, 32);
+    sha256_starts(&ctx);
+
+    while (1)
+    {
+        if (fptrIn != NULL)
+        {
+            numBytesRead = fread(buffer, 1, sizeof(buffer), fptrIn);
+            if (numBytesRead == 0) break;
+        }
+        else
+        {
+            if (dataBufferIndex >= dataLength) break;
+
+            numBytesRead = dataLength - dataBufferIndex;
+            if (numBytesRead > sizeof(buffer)) numBytesRead = sizeof(buffer);
+
+            memcpy(buffer, &dataBuffer[dataBufferIndex], numBytesRead);
+            dataBufferIndex += numBytesRead;
+        }
+        totalByteCount += numBytesRead;
+
+        sha256_update(&ctx, buffer, numBytesRead);
+    }
+    sha256_finish(&ctx, sha256sum);
+
+    if (fptrIn != NULL) fclose(fptrIn);
+    return 0;
+} // sha256
+
+
+int _main( int argc, char *argv[] )
+{
+    FILE *f;
+    int i, j;
+    char output[65];
+    sha256_context ctx;
+    unsigned char buf[1000];
+    unsigned char sha256sum[32];
+
+    if( argc < 2 )
+    {
+        printf( "\n SHA-256 Validation Tests:\n\n" );
+
+        for( i = 0; i < 3; i++ )
+        {
+            printf( " Test %d ", i + 1 );
+
+            sha256_starts( &ctx );
+
+            if( i < 2 )
+            {
+                sha256_update( &ctx, (uint8 *) msg[i], strlen( msg[i] ) );
+            }
+            else
+            {
+                memset( buf, 'a', 1000 );
+
+                for( j = 0; j < 1000; j++ )
+                {
+                    sha256_update( &ctx, (uint8 *) buf, 1000 );
+                }
+            }
+
+            sha256_finish( &ctx, sha256sum );
+
+            for( j = 0; j < 32; j++ )
+            {
+                sprintf( output + j * 2, "%02x", sha256sum[j] );
+            }
+
+
+          /*  if( memcmp( output, val[i], 64 ) )
+            {
+                printf( "failed!\n" );
+                return( 1 );
+            }*/
+
+            printf( "passed.\n" );
+        }
+
+        printf( "\n" );
+    }
+    else
+    {
+        if( ! ( f = fopen( argv[1], "rb" ) ) )
+        {
+            perror( "fopen" );
+            return( 1 );
+        }
+
+        sha256_starts( &ctx );
+
+        while( ( i = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
+        {
+            sha256_update( &ctx, buf, i );
+        }
+
+        sha256_finish( &ctx, sha256sum );
+
+        for( j = 0; j < 32; j++ )
+        {
+            printf( "%02x", sha256sum[j] );
+        }
+
+        printf( "  %s\n", argv[1] );
+    }
+
+    return( 0 );
+}
+
